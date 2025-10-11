@@ -2,6 +2,6 @@
 
 public class Author : BaseEntity
 {
-	public string AuthorName { get; set; } = string.Empty;
-	public ICollection<Book> Books { get; set; }
+	public required string AuthorName { get; set; }
+	public ICollection<Book> Books { get; set; } = new List<Book>();
 }

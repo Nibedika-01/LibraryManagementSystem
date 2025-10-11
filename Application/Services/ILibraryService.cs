@@ -1,22 +1,23 @@
-﻿using LibraryManagementSystem.Domain.Entities;
+﻿using LibraryManagementSystem.Application.DTOs;
+using LibraryManagementSystem.Domain.Entities;
 
 namespace LibraryManagementSystem.Application.Services;
 public interface ILibraryService
 {
-    Task<User> CreateUserAsync(User user);
-    Task<User> GetUserByIdAsync(int id);
+    Task<UserDto> CreateUserAsync(CreateUserDto userDto);
+    Task<UserDto> GetUserByIdAsync(int id);
 
-    Task<Author> CreateAuthorAsync(Author author);
-    Task<IEnumerable<Author>> GetAllAuthorsAsync();
+    Task<AuthorDto> CreateAuthorAsync(CreateAuthorDto authorDto);
+    Task<IEnumerable<AuthorDto>> GetAllAuthorsAsync();
 
-    Task<Book> CreateBookAsync (Book book);
-    Task<IEnumerable<Book>> GetAllBooksAsync();
-    Task IssueBookAsync(int bookId, int studentId);
+    Task<BookDto> CreateBookAsync (CreateBookDto bookDto);
+    Task<IEnumerable<BookDto>> GetAllBooksAsync();
+    Task <IssueDto> IssueBookAsync(CreateIssueDto issueDto);
 
-    Task<Student> CreateStudentAsync(Student student);
-    Task<IEnumerable<Student>> GetAllStudentsAsync();
+    Task<StudentDto> CreateStudentAsync(CreateStudentDto studentDto);
+    Task<IEnumerable<StudentDto>> GetAllStudentsAsync();
     
-    Task<IEnumerable<Issue>> GetAllIssuesAsync();
+    Task<IEnumerable<IssueDto>> GetAllIssuesAsync();
 
     Task DeleteEntityAsync<T>(int id) where T : BaseEntity;
 }

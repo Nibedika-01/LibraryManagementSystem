@@ -1,42 +1,43 @@
-﻿using LibraryManagementSystem.Application.Services;
+using AutoMapper;
+using LibraryManagementSystem.Application.Mapping;
+using LibraryManagementSystem.Application.Services;
 using LibraryManagementSystem.Infrastructure.Persistence;
 using LibraryManagementSystem.Application.Interfaces;
-using LibraryManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 
-namespace LibraryManagementSystem.Presentation;
+var builder = WebApplication.CreateBuilder(args);
 
-class Program
+builder.Services.AddControllers();
+builder.Services.AddDbContext<LibraryDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IRepositoryFactory, RepositoryFactory>();
+builder.Services.AddScoped<ILibraryService, LibraryService>();
+builder.Services.AddAutoMapper(typeof(MappingProfile)); 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
 {
-    static async Task Main(string[] args)
-    {
-        var host = CreateHostBuilder(args).Build();
-        using var scope = host.Services.CreateScope();
-        var services = scope.ServiceProvider;
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Library Management API", Version = "v1" });
+});
 
-        var context = services.GetRequiredService<LibraryDbContext>();
-        await context.Database.MigrateAsync();
+var app = builder.Build();
 
-        var app = services.GetRequiredService<LibraryApp>();
-        await app.RunAsync();
-    }
-    static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args).ConfigureAppConfiguration((context, config) =>
-        {
-            config.AddJsonFile("appsettings.json", optional: false);
-        }).ConfigureServices((context, services) =>
-        {
-            services.AddDbContext<LibraryDbContext>(options =>
-                    options.UseSqlServer(context.Configuration.GetConnectionString("DefaultConnection")));
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Library Management API v1"));
+};
 
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+app.UseAuthorization();
+app.MapControllers();
 
-            services.AddScoped<ILibraryService, LibraryService>();
-
-            services.AddScoped<LibraryApp>();
-        });
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<LibraryDbContext>();
+    context.Database.Migrate();
 }
 
+app.Run();

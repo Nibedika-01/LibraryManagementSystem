@@ -1,105 +1,116 @@
-﻿using LibraryManagementSystem.Domain.Entities;
+﻿using AutoMapper;
+using LibraryManagementSystem.Application.DTOs;
 using LibraryManagementSystem.Application.Interfaces;
+using LibraryManagementSystem.Domain.Entities;
+using BCrypt.Net;
 
 namespace LibraryManagementSystem.Application.Services;
 
 public class LibraryService : ILibraryService
 {
-	private readonly IRepository<User> _userRepo;
-	private readonly IRepository<Author> _authorRepo;
-    private readonly IRepository<Book> _bookRepo;
-    private readonly IRepository<Student> _studentRepo;
-    private readonly IRepository<Issue> _issueRepo;
+    private readonly IRepository<User> _userRepository;
+    private readonly IRepository<Author> _authorRepository;
+    private readonly IRepository<Book> _bookRepository;
+    private readonly IRepository<Student> _studentRepository;
+    private readonly IRepository<Issue> _issueRepository;
+    private readonly IRepositoryFactory _repositoryFactory;
+    private readonly IMapper _mapper;
 
     public LibraryService(
-        IRepository<User> userRepo,
-        IRepository<Author> authorRepo,
-        IRepository<Book> bookRepo,
-        IRepository<Student> studentRepo,
-        IRepository<Issue> issueRepo)
+        IRepository<User> userRepository,
+        IRepository<Author> authorRepository,
+        IRepository<Book> bookRepository,
+        IRepository<Student> studentRepository,
+        IRepository<Issue> issueRepository,
+        IRepositoryFactory repositoryFactory,
+        IMapper mapper)
     {
-        _userRepo = userRepo;
-        _authorRepo = authorRepo;
-        _bookRepo = bookRepo;
-        _studentRepo = studentRepo;
-        _issueRepo = issueRepo;
+        _userRepository = userRepository;
+        _authorRepository = authorRepository;
+        _bookRepository = bookRepository;
+        _studentRepository = studentRepository;
+        _issueRepository = issueRepository;
+        _repositoryFactory = repositoryFactory;
+        _mapper = mapper;
     }
 
-    public async Task<User> CreateUserAsync(User user)
+    public async Task<UserDto> CreateUserAsync(CreateUserDto userDto)
     {
-        await _userRepo.AddAsync(user);
-        return user;
-    }
-    public async Task<User> GetUserByIdAsync(int id)
-    {
-        return await _userRepo.GetByIdAsync(id);
-    }
-    
-    public async Task<Author> CreateAuthorAsync(Author author)
-    {
-        await _authorRepo.AddAsync(author);
-        return author;
-    }
-    public async Task<IEnumerable<Author>> GetAllAuthorsAsync()
-    {
-        return await _authorRepo.GetAllAsync(a => !a.IsDeleted);
-    }
-    
-    public async Task<Book> CreateBookAsync(Book book)
-    {
-        await _bookRepo.AddAsync(book);
-        return book;
-    }
-    public async Task<IEnumerable<Book>> GetAllBooksAsync()
-    {
-        return await _bookRepo.GetAllAsync(b => !b.IsDeleted);
+        var user = _mapper.Map<User>(userDto);
+        user.Password =  BCrypt.Net.BCrypt.HashPassword(user.Password);
+        user.CreatedAt = user.CreatedAt != default ? user.CreatedAt : DateTime.UtcNow;
+        await _userRepository.AddAsync(user);
+        return _mapper.Map<UserDto>(user);
     }
 
-    public async Task<Student> CreateStudentAsync(Student student)
+    public async Task<UserDto> GetUserByIdAsync(int id)
     {
-        await _studentRepo.AddAsync(student);
-        return student;
-    }
-    public async Task<IEnumerable<Student>> GetAllStudentsAsync()
-    {
-        return await _studentRepo.GetAllAsync(s => !s.IsDeleted);
+        var user = await _userRepository.GetByIdAsync(id);
+        return _mapper.Map<UserDto>(user);
     }
 
-    public async Task<IEnumerable<Issue>> GetAllIssuesAsync()
+    public async Task<AuthorDto> CreateAuthorAsync(CreateAuthorDto authorDto)
     {
-        return await _issueRepo.GetAllAsync(i => !i.IsDeleted);
+        var author = _mapper.Map<Author>(authorDto);
+        await _authorRepository.AddAsync(author);
+        return _mapper.Map<AuthorDto>(author);
     }
 
-    public async Task IssueBookAsync (int bookId, int studentId)
+    public async Task<IEnumerable<AuthorDto>> GetAllAuthorsAsync()
     {
-        var book = await _bookRepo.GetByIdAsync(bookId);
+        var authors = await _authorRepository.GetAllAsync(a => !a.IsDeleted);
+        return _mapper.Map<IEnumerable<AuthorDto>>(authors);
+    }
+
+    public async Task<BookDto> CreateBookAsync(CreateBookDto bookDto)
+    {
+        var book = _mapper.Map<Book>(bookDto);
+        await _bookRepository.AddAsync(book);
+        return _mapper.Map<BookDto>(book);
+    }
+
+    public async Task<IEnumerable<BookDto>> GetAllBooksAsync()
+    {
+        var books = await _bookRepository.GetAllAsync(b => !b.IsDeleted);
+        return _mapper.Map<IEnumerable<BookDto>>(books);
+    }
+
+    public async Task<StudentDto> CreateStudentAsync(CreateStudentDto studentDto)
+    {
+        var student = _mapper.Map<Student>(studentDto);
+        await _studentRepository.AddAsync(student);
+        return _mapper.Map<StudentDto>(student);
+    }
+
+    public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync()
+    {
+        var students = await _studentRepository.GetAllAsync(s => !s.IsDeleted);
+        return _mapper.Map<IEnumerable<StudentDto>>(students);
+    }
+
+    public async Task<IssueDto> IssueBookAsync(CreateIssueDto issueDto)
+    {
+        var book = await _bookRepository.GetByIdAsync(issueDto.BookId);
         if (book == null || book.IsDeleted) throw new Exception("Book not found");
 
-        var student = await _studentRepo.GetByIdAsync (studentId);
+        var student = await _studentRepository.GetByIdAsync(issueDto.StudentId);
         if (student == null || student.IsDeleted) throw new Exception("Student not found");
 
-        var issue = new Issue {  BookId = bookId, StudentId = studentId };
-        await _issueRepo.AddAsync(issue);
+        var issue = _mapper.Map<Issue>(issueDto);
+        issue.IssueDate = issue.IssueDate != default ? issue.IssueDate : DateTime.UtcNow;
+        await _issueRepository.AddAsync(issue);
+        return _mapper.Map<IssueDto>(issue);
+    }
+
+    public async Task<IEnumerable<IssueDto>> GetAllIssuesAsync()
+    {
+        var issues = await _issueRepository.GetAllAsync(i => !i.IsDeleted);
+        return _mapper.Map<IEnumerable<IssueDto>>(issues);
     }
 
     public async Task DeleteEntityAsync<T>(int id) where T : BaseEntity
     {
-        var repo = GetRepository<T>();
-        var entity = await repo.GetByIdAsync(id);
-        if(entity != null)
-        {
-            entity.IsDeleted = true;
-            await repo.UpdateAsync(entity);
-        }
-    }
-
-    private IRepository<T> GetRepository<T>() where T : BaseEntity
-    {
-        if (typeof(T) == typeof(User)) return (IRepository<T>) _userRepo;
-        if (typeof(T) == typeof(Author)) return (IRepository<T>) _authorRepo;
-        if (typeof(T) == typeof(Book)) return (IRepository<T>)_bookRepo;
-        if (typeof(T) == typeof(Student)) return (IRepository<T>)_studentRepo;
-        if (typeof(T) == typeof(Issue)) return (IRepository<T>)_issueRepo;
-        throw new NotSupportedException();
+        var repository = _repositoryFactory.GetRepository<T>();
+        await repository.DeleteAsync(id);
     }
 }
