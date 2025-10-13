@@ -8,15 +8,29 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<User, UserDto>().ReverseMap();
-        CreateMap<User, CreateUserDto>().ReverseMap();
-        CreateMap<Author, AuthorDto>().ReverseMap();
-        CreateMap<Author, CreateAuthorDto>().ReverseMap();
-        CreateMap<Book, BookDto>().ReverseMap();
-        CreateMap<Book, CreateBookDto>().ReverseMap();
-        CreateMap<Student, StudentDto>().ReverseMap();
-        CreateMap<Student, CreateStudentDto>().ReverseMap();
-        CreateMap<Issue, IssueDto>().ReverseMap();
-        CreateMap<Issue, CreateIssueDto>().ReverseMap();
+        //User
+        CreateMap<CreateUserDto, User>();
+        CreateMap<UpdateUserDto, User>();
+        CreateMap<User, UserDto>();
+
+        // Author
+        CreateMap<CreateAuthorDto, Author>();
+        CreateMap<UpdateAuthorDto, Author>();
+        CreateMap<Author, AuthorDto>();
+
+        // Book
+        CreateMap<CreateBookDto, Book>();
+        CreateMap<UpdateBookDto, Book>();
+        CreateMap<Book, BookDto>();
+
+        // Student
+        CreateMap<CreateStudentDto, Student>();
+        CreateMap<UpdateStudentDto, Student>();
+        CreateMap<Student, StudentDto>();
+
+        // Issue
+        CreateMap<CreateIssueDto, Issue>();
+        CreateMap<UpdateIssueDto, Issue>();
+        CreateMap<Issue, IssueDto>();
     }
 }

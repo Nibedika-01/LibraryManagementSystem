@@ -2,6 +2,7 @@
 using LibraryManagementSystem.Application.DTOs;
 using LibraryManagementSystem.Application.Interfaces;
 using LibraryManagementSystem.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
 
 namespace LibraryManagementSystem.Application.Services;
@@ -34,6 +35,7 @@ public class LibraryService : ILibraryService
         _mapper = mapper;
     }
 
+    //User
     public async Task<UserDto> CreateUserAsync(CreateUserDto userDto)
     {
         var user = _mapper.Map<User>(userDto);
@@ -43,16 +45,63 @@ public class LibraryService : ILibraryService
         return _mapper.Map<UserDto>(user);
     }
 
+    public async Task<UserDto> UpdateUserAsync(int id, UpdateUserDto userDto)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null) throw new Exception("User not found");
+
+        user.Username = userDto.Username ?? user.Username;
+        if (!string.IsNullOrEmpty(userDto.Password)) user.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+        user.CreatedAt = userDto.CreatedAt ?? user.CreatedAt;
+
+        await _userRepository.UpdateAsync(user);
+        return _mapper.Map<UserDto>(user);
+    }
+
+    public async Task DeleteUserAsync(int id)
+    {
+        await _userRepository.DeleteAsync(id);
+    }
+
     public async Task<UserDto> GetUserByIdAsync(int id)
     {
         var user = await _userRepository.GetByIdAsync(id);
         return _mapper.Map<UserDto>(user);
     }
 
+    public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+    {
+        var users = await _userRepository.GetAllAsync(a => !a.IsDeleted);
+        return _mapper.Map<IEnumerable<UserDto>>(users);
+    }
+
+    //Author
     public async Task<AuthorDto> CreateAuthorAsync(CreateAuthorDto authorDto)
     {
         var author = _mapper.Map<Author>(authorDto);
         await _authorRepository.AddAsync(author);
+        return _mapper.Map<AuthorDto>(author);
+    }
+
+    public async Task<AuthorDto> UpdateAuthorAsync(int id, UpdateAuthorDto authorDto)
+    {
+        var author = await _authorRepository.GetByIdAsync(id);
+        if (author == null) throw new Exception("Author not found");
+
+        author.AuthorName = authorDto.AuthorName ?? author.AuthorName;
+
+        await _authorRepository.UpdateAsync(author);
+        return _mapper.Map<AuthorDto>(author);
+    }
+
+    public async Task DeleteAuthorAsync(int id)
+    {
+        await _authorRepository.DeleteAsync(id);
+    }
+
+    public async Task<AuthorDto> GetAuthorByIdAsync(int id)
+    {
+        var author = await _authorRepository.GetByIdAsync(id);
         return _mapper.Map<AuthorDto>(author);
     }
 
@@ -62,10 +111,38 @@ public class LibraryService : ILibraryService
         return _mapper.Map<IEnumerable<AuthorDto>>(authors);
     }
 
+    //Book
     public async Task<BookDto> CreateBookAsync(CreateBookDto bookDto)
     {
         var book = _mapper.Map<Book>(bookDto);
         await _bookRepository.AddAsync(book);
+        return _mapper.Map<BookDto>(book);
+    }
+
+    public async Task<BookDto> UpdateBookAsync(int id, UpdateBookDto bookDto)
+    {
+        var book = await _bookRepository.GetByIdAsync(id);
+        if (book == null) throw new Exception("Book not found");
+
+        book.Title = bookDto.Title ?? book.Title;
+        book.AuthorId = bookDto.AuthorId != 0 ? bookDto.AuthorId : book.AuthorId;
+        book.Genre = bookDto.Genre ?? book.Genre;
+        book.Publisher = bookDto.Publisher ?? book.Publisher;
+        book.PublicationDate = bookDto.PublicationDate ?? book.PublicationDate;
+
+        await _bookRepository.UpdateAsync(book);
+        return _mapper.Map<BookDto>(book);
+
+    }
+
+    public async Task DeleteBookAsync(int id)
+    {
+        await _bookRepository.DeleteAsync(id);
+    }
+
+    public async Task<BookDto> GetBookByIdAsync(int id)
+    {
+        var book = await _bookRepository.GetByIdAsync(id);
         return _mapper.Map<BookDto>(book);
     }
 
@@ -75,6 +152,7 @@ public class LibraryService : ILibraryService
         return _mapper.Map<IEnumerable<BookDto>>(books);
     }
 
+    //Student
     public async Task<StudentDto> CreateStudentAsync(CreateStudentDto studentDto)
     {
         var student = _mapper.Map<Student>(studentDto);
@@ -82,23 +160,120 @@ public class LibraryService : ILibraryService
         return _mapper.Map<StudentDto>(student);
     }
 
+    public async Task<StudentDto> UpdateStudentAsync(int id, UpdateStudentDto studentDto)
+    {
+        var student = await _studentRepository.GetByIdAsync(id);
+        if (student == null) throw new Exception("Student not found");
+
+        student.Name = studentDto.Name ?? student.Name;
+        student.Address = studentDto.Address ?? student.Address;
+        student.ContactNo = studentDto.ContactNo ?? student.ContactNo;
+        student.Faculty = studentDto.Faculty ?? student.Faculty;
+        student.Semester = studentDto.Semester ?? student.Semester;
+
+        await _studentRepository.UpdateAsync(student);
+        return _mapper.Map<StudentDto>(student);
+    }
+
+    public async Task DeleteStudentAsync(int id)
+    {
+        await _studentRepository.DeleteAsync(id);
+    }
+
+    public async Task<StudentDto> GetStudentByIdAsync(int id)
+    {
+        var student = await _studentRepository.GetByIdAsync(id);
+        return _mapper.Map<StudentDto>(student);
+    }
+
     public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync()
     {
-        var students = await _studentRepository.GetAllAsync(s => !s.IsDeleted);
+        var students = await _studentRepository.GetAllAsync();
         return _mapper.Map<IEnumerable<StudentDto>>(students);
     }
 
-    public async Task<IssueDto> IssueBookAsync(CreateIssueDto issueDto)
+    //Issue
+    public async Task<IssueDto> CreateIssueAsync(CreateIssueDto issueDto)
     {
+        // Validate book exists
         var book = await _bookRepository.GetByIdAsync(issueDto.BookId);
-        if (book == null || book.IsDeleted) throw new Exception("Book not found");
+        if (book == null || book.IsDeleted) throw new Exception($"Book with id {issueDto.BookId} not found");
 
+        // Validate student exists
         var student = await _studentRepository.GetByIdAsync(issueDto.StudentId);
-        if (student == null || student.IsDeleted) throw new Exception("Student not found");
+        if (student == null || student.IsDeleted) throw new Exception($"Student with id {issueDto.StudentId} not found");
 
-        var issue = _mapper.Map<Issue>(issueDto);
-        issue.IssueDate = issue.IssueDate != default ? issue.IssueDate : DateTime.UtcNow;
+        // Check if book is already issued
+        var existingIssues = await _issueRepository.GetAllAsync(i => !i.IsDeleted && i.BookId == issueDto.BookId && !i.ReturnDate.HasValue);
+        if (existingIssues.Any()) throw new Exception("Book is already issued and not yet returned");
+
+        var issue = new Issue
+        {
+            BookId = issueDto.BookId,
+            StudentId = issueDto.StudentId,
+            IssueDate = issueDto.IssueDate ?? DateTime.UtcNow
+        };
+
         await _issueRepository.AddAsync(issue);
+
+        var issueResult = _mapper.Map<IssueDto>(issue);
+        issueResult.BookTitle = book.Title;
+        issueResult.StudentName = student.Name;
+        return issueResult;
+    }
+
+    public async Task<IssueDto> UpdateIssueAsync(int id, UpdateIssueDto issueDto)
+    {
+        var issue = await _issueRepository.GetByIdAsync(id);
+        if (issue == null) throw new KeyNotFoundException($"Issue with id {id} not found");
+
+        // Update book if provided
+        if (issueDto.BookId != 0)
+        {
+            var book = await _bookRepository.GetByIdAsync(issueDto.BookId);
+            if (book == null || book.IsDeleted) throw new Exception($"Book with id {issueDto.BookId} not found");
+            issue.BookId = issueDto.BookId;
+        }
+
+        // Update student if provided
+        if (issueDto.StudentId != 0)
+        {
+            var student = await _studentRepository.GetByIdAsync(issueDto.StudentId);
+            if (student == null || student.IsDeleted) throw new Exception($"Student with id {issueDto.StudentId} not found");
+            issue.StudentId = issueDto.StudentId;
+        }
+
+        // Update issue date if provided
+        if (issueDto.IssueDate.HasValue)
+        {
+            issue.IssueDate = issueDto.IssueDate.Value;
+        }
+
+        // Update return date if provided
+        if (issueDto.ReturnDate.HasValue)
+        {
+            issue.ReturnDate = issueDto.ReturnDate.Value;
+        }
+
+        await _issueRepository.UpdateAsync(issue);
+
+        var book2 = await _bookRepository.GetByIdAsync(issue.BookId);
+        var student2 = await _studentRepository.GetByIdAsync(issue.StudentId);
+        var result = _mapper.Map<IssueDto>(issue);
+        result.BookTitle = book2?.Title;
+        result.StudentName = student2?.Name;
+        return result;
+    }
+
+
+    public async Task DeleteIssueAsync(int id)
+    {
+        await _issueRepository.DeleteAsync(id);
+    }
+
+    public async Task<IssueDto> GetIssueByIdAsync(int id)
+    {
+        var issue = await _issueRepository.GetByIdAsync(id);
         return _mapper.Map<IssueDto>(issue);
     }
 
@@ -108,9 +283,29 @@ public class LibraryService : ILibraryService
         return _mapper.Map<IEnumerable<IssueDto>>(issues);
     }
 
-    public async Task DeleteEntityAsync<T>(int id) where T : BaseEntity
+    public async Task<IssueDto> IssueBookAsync(string bookTitle, string studentName)
     {
-        var repository = _repositoryFactory.GetRepository<T>();
-        await repository.DeleteAsync(id);
+        var books = await _bookRepository.GetAllAsync(b => !b.IsDeleted && b.Title == bookTitle);
+        var book = books.FirstOrDefault();
+        if (book == null) throw new Exception($"Book with title '{bookTitle}' not found");
+
+        var existingIssues = await _issueRepository.GetAllAsync(i => !i.IsDeleted && i.BookId == book.Id && !i.ReturnDate.HasValue);
+        if (existingIssues.Any()) throw new Exception("Book is already issued and not yet returned");
+
+        var students = await _studentRepository.GetAllAsync(s => !s.IsDeleted && s.Name == studentName);
+        var student = students.FirstOrDefault();
+        if (student == null) throw new Exception($"Student with name '{studentName}' not found");
+
+        var issue = new Issue
+        {
+            BookId = book.Id,
+            StudentId = student.Id,
+            IssueDate = DateTime.UtcNow
+        };
+
+        await _issueRepository.AddAsync(issue);
+        
+        var issueResult = _mapper.Map<IssueDto>(issue);
+        return issueResult;
     }
 }

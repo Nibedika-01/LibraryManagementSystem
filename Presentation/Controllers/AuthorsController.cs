@@ -23,6 +23,28 @@ public class AuthorsController : ControllerBase
         return Ok(createdAuthorDto);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAuthor(int id, [FromBody] UpdateAuthorDto authorDto)
+    {
+        if (authorDto == null) return BadRequest("Author data is required");
+        var updatedAuthorDto = await _libraryService.UpdateAuthorAsync(id, authorDto);
+        return Ok(updatedAuthorDto);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAuthor(int id)
+    {
+        await _libraryService.GetAuthorByIdAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetAuthorById(int id)
+    {
+        var authorDto = await _libraryService.GetAuthorByIdAsync(id);
+        return authorDto != null ? Ok(authorDto) : NotFound();
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllAuthors()
     {

@@ -23,10 +23,32 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(GetUserById), new { id = createdUserDto.Id }, createdUserDto);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto userDto)
+    {
+        if (userDto == null) return BadRequest("User data is required");
+        var updatedUserDto = await _libraryService.UpdateUserAsync(id, userDto);
+            return Ok(updatedUserDto);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        await _libraryService.DeleteUserAsync(id);
+        return NoContent();
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUserById(int id)
     {
         var userDto = await _libraryService.GetUserByIdAsync(id);
         return userDto != null ? Ok(userDto) : NotFound();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var users = await _libraryService.GetAllUsersAsync();
+        return Ok(users);
     }
 }

@@ -23,6 +23,28 @@ public class BooksController : ControllerBase
         return Ok(createdBookDto);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateBook(int id, [FromBody] UpdateBookDto bookDto)
+    {
+        if (bookDto == null) return BadRequest("Book data is required");
+        var updatedBookDto = await _libraryService.UpdateBookAsync(id, bookDto);
+        return Ok(updatedBookDto);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteBook(int id)
+    {
+        await _libraryService.DeleteBookAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetBookById(int id)
+    {
+        var bookDto = await _libraryService.GetBookByIdAsync(id);
+        return bookDto != null ? Ok(bookDto) : NotFound();
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllBooks()
     {
@@ -30,11 +52,10 @@ public class BooksController : ControllerBase
         return Ok(books);
     }
 
-    [HttpPost("{bookId}/issue/{studentId}")]
-    public async Task<IActionResult> IssueBook(int bookId, int studentId)
+    [HttpPost("issue")]
+    public async Task<IActionResult> IssueBook([FromBody] IssueRequestDto request)
     {
-        var issueDto = new CreateIssueDto { BookId = bookId, StudentId = studentId };
-        var createdIssueDto = await _libraryService.IssueBookAsync(issueDto);
+        var createdIssueDto = await _libraryService.IssueBookAsync(request.BookTitle!, request.StudentName!);
         return Ok(createdIssueDto);
     }
 }

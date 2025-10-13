@@ -23,6 +23,28 @@ public class StudentsController : ControllerBase
         return Ok(createdStudentDto);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateStudent(int id, [FromBody] UpdateStudentDto studentDto)
+    {
+        if (studentDto == null) return BadRequest("Student data is required");
+        var updatedStudentDto = await _libraryService.UpdateStudentAsync(id, studentDto);
+        return Ok(updatedStudentDto);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteStudent(int id)
+    {
+        await _libraryService.DeleteStudentAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetStudentById(int id)
+    {
+        var studentDto = await _libraryService.GetStudentByIdAsync(id);
+        return studentDto != null ? Ok(studentDto) : NotFound();
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllStudents()
     {
