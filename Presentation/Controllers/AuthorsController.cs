@@ -34,7 +34,7 @@ public class AuthorsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAuthor(int id)
     {
-        await _libraryService.GetAuthorByIdAsync(id);
+        await _libraryService.DeleteAuthorAsync(id);
         return NoContent();
     }
 

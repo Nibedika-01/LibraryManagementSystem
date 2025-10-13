@@ -285,16 +285,15 @@ public class LibraryService : ILibraryService
 
     public async Task<IssueDto> IssueBookAsync(string bookTitle, string studentName)
     {
-        var books = await _bookRepository.GetAllAsync(b => !b.IsDeleted && b.Title == bookTitle);
-        var book = books.FirstOrDefault();
-        if (book == null) throw new Exception($"Book with title '{bookTitle}' not found");
+        var books = await _bookRepository.GetAllAsync(b => !b.IsDeleted && b.Title == bookTitle &&
+    !b.Issues.Any(i => !i.IsDeleted));
 
-        var existingIssues = await _issueRepository.GetAllAsync(i => !i.IsDeleted && i.BookId == book.Id && !i.ReturnDate.HasValue);
-        if (existingIssues.Any()) throw new Exception("Book is already issued and not yet returned");
+        var book = books.FirstOrDefault();
+        if (book == null) throw new Exception("Available book not found with the given title");
 
         var students = await _studentRepository.GetAllAsync(s => !s.IsDeleted && s.Name == studentName);
         var student = students.FirstOrDefault();
-        if (student == null) throw new Exception($"Student with name '{studentName}' not found");
+        if (student == null) throw new Exception("Student not found with the given name");
 
         var issue = new Issue
         {
@@ -304,8 +303,8 @@ public class LibraryService : ILibraryService
         };
 
         await _issueRepository.AddAsync(issue);
-        
-        var issueResult = _mapper.Map<IssueDto>(issue);
-        return issueResult;
+        issue.Book = book;
+        issue.Student = student;
+        return _mapper.Map<IssueDto>(issue);
     }
 }

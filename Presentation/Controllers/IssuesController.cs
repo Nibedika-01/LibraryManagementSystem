@@ -21,7 +21,7 @@ public class IssuesController : ControllerBase
         if (issueDto == null) return BadRequest("Issue data is required");
         var createdIssueDto = await _libraryService.CreateIssueAsync(issueDto);
         return CreatedAtAction(nameof(GetIssueById), new { id = createdIssueDto.Id }, createdIssueDto);
-    }
+    }`
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateIssue(int id, [FromBody] UpdateIssueDto issueDto)
