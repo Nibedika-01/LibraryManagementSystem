@@ -39,5 +39,5 @@ public interface ILibraryService
     Task<IssueDto> GetIssueByIdAsync(int id);
     Task<IEnumerable<IssueDto>> GetAllIssuesAsync();
 
-    Task<IssueDto> IssueBookAsync(string bookTitle, string studentName);
+    //Task<IssueDto> IssueBookAsync(string bookTitle, string studentName);
 }

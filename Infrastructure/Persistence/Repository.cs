@@ -19,7 +19,16 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public async Task<T> GetByIdAsync(int id)
     {
-        var entity = await _dbSet.FindAsync(id);
+        IQueryable<T> query = _dbSet;
+
+        if (typeof(T) == typeof(Issue))
+        {
+            query = ((IQueryable<Issue>)(object)query)
+                .Include(i => i.Book)
+                .Include(i => i.Student) as IQueryable<T> ?? _dbSet;
+        }
+
+        var entity = await query.FirstOrDefaultAsync(e => e.Id == id);
         if (entity == null)
             throw new KeyNotFoundException($"Entity with id {id} not found");
         return entity;
@@ -28,9 +37,21 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null)
     {
         IQueryable<T> query = _dbSet;
-        if(predicate != null) query = query.Where(predicate);
+
+        if (typeof(T) == typeof(Issue))
+        {
+            var issueQuery = ((IQueryable<Issue>)(object)query)
+                .Include(i => i.Book)
+                .Include(i => i.Student);
+            query = (IQueryable<T>)(object)issueQuery;
+        }
+
+        if (predicate != null)
+            query = query.Where(predicate);
+
         return await query.ToListAsync();
     }
+
 
     public async Task AddAsync(T Entity)
     {

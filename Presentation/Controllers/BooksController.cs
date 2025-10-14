@@ -52,10 +52,10 @@ public class BooksController : ControllerBase
         return Ok(books);
     }
 
-    [HttpPost("issue")]
-    public async Task<IActionResult> IssueBook([FromBody] IssueRequestDto request)
-    {
-        var createdIssueDto = await _libraryService.IssueBookAsync(request.BookTitle!, request.StudentName!);
-        return Ok(createdIssueDto);
-    }
+    //[HttpPost("issue")]
+    //public async Task<IActionResult> IssueBook([FromBody] IssueRequestDto request)
+    //{
+    //    var createdIssueDto = await _libraryService.IssueBookAsync(request.BookTitle!, request.StudentName!);
+    //    return Ok(createdIssueDto);
+    //}
 }
