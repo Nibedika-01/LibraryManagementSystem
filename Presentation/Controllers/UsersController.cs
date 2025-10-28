@@ -23,6 +23,20 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(GetUserById), new { id = createdUserDto.Id }, createdUserDto);
     }
 
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+    {
+        if (loginDto == null) return BadRequest("Login data is required");
+        try
+        {
+            var user = await _libraryService.LoginAsync(loginDto.Username, loginDto.Password);
+            return Ok(user);
+        } catch(Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto userDto)
     {

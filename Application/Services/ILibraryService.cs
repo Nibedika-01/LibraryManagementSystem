@@ -6,6 +6,7 @@ public interface ILibraryService
 {
     //User
     Task<UserDto> CreateUserAsync(CreateUserDto userDto);
+    Task<UserDto> LoginAsync(string username, string password);
     Task<UserDto> UpdateUserAsync(int id, UpdateUserDto userDto);
     Task DeleteUserAsync(int id);
     Task<UserDto> GetUserByIdAsync(int id);

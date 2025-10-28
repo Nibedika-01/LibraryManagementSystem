@@ -45,6 +45,21 @@ public class LibraryService : ILibraryService
         return _mapper.Map<UserDto>(user);
     }
 
+    public async Task<UserDto> LoginAsync(string username, string password)
+    {
+        var user = (await _userRepository.GetAllAsync(u => u.Username.ToLower() == username.ToLower())).FirstOrDefault();
+
+        if(user == null)
+        {
+            throw new Exception("User not found");
+        }
+
+        bool isPasswordField = BCrypt.Net.BCrypt.Verify(password, user.Password);
+        if (!isPasswordField)
+            throw new Exception("Password do not match");
+        return _mapper.Map<UserDto>(user);
+    }
+
     public async Task<UserDto> UpdateUserAsync(int id, UpdateUserDto userDto)
     {
         var user = await _userRepository.GetByIdAsync(id);
