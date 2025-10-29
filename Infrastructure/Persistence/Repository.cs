@@ -52,6 +52,11 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return await query.ToListAsync();
     }
 
+    public async Task<int> GetTotalCountAsync()
+    {
+        return await _context.Books.CountAsync();
+    }
+
 
     public async Task AddAsync(T Entity)
     {

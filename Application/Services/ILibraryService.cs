@@ -24,6 +24,7 @@ public interface ILibraryService
     Task<BookDto> UpdateBookAsync(int id, UpdateBookDto bookDto);
     Task DeleteBookAsync(int id);
     Task<BookDto> GetBookByIdAsync(int id);
+    Task<int> GetTotalBooksAsync();
     Task<IEnumerable<BookDto>> GetAllBooksAsync();
 
     //Student

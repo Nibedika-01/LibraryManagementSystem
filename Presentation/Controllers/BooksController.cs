@@ -52,6 +52,13 @@ public class BooksController : ControllerBase
         return Ok(books);
     }
 
+    [HttpGet("total")]
+    public async Task<IActionResult> GetTotalBooks()
+    {
+        var total = await _libraryService.GetTotalBooksAsync();
+        return Ok(new { total });
+    }
+
     //[HttpPost("issue")]
     //public async Task<IActionResult> IssueBook([FromBody] IssueRequestDto request)
     //{

@@ -167,6 +167,11 @@ public class LibraryService : ILibraryService
         return _mapper.Map<IEnumerable<BookDto>>(books);
     }
 
+    public async Task<int> GetTotalBooksAsync()
+    {
+       return await _bookRepository.GetTotalCountAsync();
+    }
+
     //Student
     public async Task<StudentDto> CreateStudentAsync(CreateStudentDto studentDto)
     {
