@@ -39,6 +39,7 @@ public interface ILibraryService
     Task<IssueDto> UpdateIssueAsync(int id, UpdateIssueDto issueDto);
     Task DeleteIssueAsync(int id);
     Task<IssueDto> GetIssueByIdAsync(int id);
+    Task<int> GetTotalIssuesAsync();
     Task<IEnumerable<IssueDto>> GetAllIssuesAsync();
 
     //Task<IssueDto> IssueBookAsync(string bookTitle, string studentName);

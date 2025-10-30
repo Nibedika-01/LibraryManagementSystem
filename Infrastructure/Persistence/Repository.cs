@@ -54,7 +54,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public async Task<int> GetTotalCountAsync()
     {
-        return await _context.Books.CountAsync();
+        return await _dbSet.CountAsync();
     }
 
 

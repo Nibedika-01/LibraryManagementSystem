@@ -51,4 +51,11 @@ public class IssuesController : ControllerBase
         var issues = await _libraryService.GetAllIssuesAsync();
         return Ok(issues);
     }
+
+    [HttpGet("total")]
+    public async Task<IActionResult> GetTotalIssues()
+    {
+        var total = await _libraryService.GetTotalIssuesAsync();
+        return Ok(new { total });
+    }
 }

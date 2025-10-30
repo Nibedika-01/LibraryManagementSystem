@@ -312,6 +312,11 @@ public class LibraryService : ILibraryService
         return issueDtos;
     }
 
+    public async Task<int> GetTotalIssuesAsync()
+    {
+        return await _issueRepository.GetTotalCountAsync();
+    }
+
     //public async Task<IssueDto> IssueBookAsync(string bookTitle, string studentName)
     //{
     //    var books = await _bookRepository.GetAllAsync(b => !b.IsDeleted && b.Title == bookTitle &&
