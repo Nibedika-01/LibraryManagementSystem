@@ -1,4 +1,5 @@
 ﻿namespace LibraryManagementSystem.Application.DTOs;
+using System.Text.Json.Serialization;
 
 public class IssueDto
 {
@@ -14,9 +15,12 @@ public class IssueDto
 
 public class CreateIssueDto
 {
+    [JsonPropertyName("bookIsbn")]
     public int BookId { get; set; }
+    [JsonPropertyName("memberId")]
     public int StudentId { get; set; }
     public DateTime? IssueDate { get; set; }
+    public string? Action { get; set; }
 }
 
 public class UpdateIssueDto

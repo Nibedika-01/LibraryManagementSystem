@@ -51,4 +51,10 @@ public class StudentsController : ControllerBase
         var students = await _libraryService.GetAllStudentsAsync();
         return Ok(students);
     }
+    [HttpGet("total")]
+    public async Task<IActionResult> GetTotalStudents()
+    {
+        var total = await _libraryService.GetTotalStudentsAsync();
+        return Ok(new { total });
+    }
 }

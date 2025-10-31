@@ -4,6 +4,7 @@ using LibraryManagementSystem.Application.Interfaces;
 using LibraryManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace LibraryManagementSystem.Application.Services;
 
@@ -163,7 +164,7 @@ public class LibraryService : ILibraryService
 
     public async Task<IEnumerable<BookDto>> GetAllBooksAsync()
     {
-        var books = await _bookRepository.GetAllAsync(b => !b.IsDeleted);
+        var books = await _bookRepository.GetAllAsync();
         return _mapper.Map<IEnumerable<BookDto>>(books);
     }
 
@@ -211,6 +212,11 @@ public class LibraryService : ILibraryService
         var students = await _studentRepository.GetAllAsync();
         return _mapper.Map<IEnumerable<StudentDto>>(students);
     }
+    public async Task<int> GetTotalStudentsAsync()
+    {
+        return await _studentRepository.GetTotalCountAsync();
+    }
+
 
     //Issue
     public async Task<IssueDto> CreateIssueAsync(CreateIssueDto issueDto)

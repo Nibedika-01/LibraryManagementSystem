@@ -8,7 +8,7 @@ public class BookDto
     public string? Genre { get; set; }
     public string? Publisher { get; set; }
     public DateTime? PublicationDate { get; set; }
-    public bool IsDeleted { get; set; }
+    public bool IsAvailable { get; set; }
 }
 
 public class CreateBookDto
@@ -27,5 +27,6 @@ public class UpdateBookDto
     public string? Genre { get; set; }
     public string? Publisher { get; set; }
     public DateTime? PublicationDate { get; set; }
+    public bool IsAvailable { get; set; }
 
 }

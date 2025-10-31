@@ -19,8 +19,49 @@ public class IssuesController : ControllerBase
     public async Task<IActionResult> CreateIssue([FromBody] CreateIssueDto issueDto)
     {
         if (issueDto == null) return BadRequest("Issue data is required");
+
+        var book = await _libraryService.GetBookByIdAsync(issueDto.BookId);
+        if (book == null) return BadRequest("Book not found");
+
+        if (!book.IsAvailable) return BadRequest("Book is already issued");
+
         var createdIssueDto = await _libraryService.CreateIssueAsync(issueDto);
+
+        var updateBookDto = new UpdateBookDto
+        {
+            Title = book.Title,
+            IsAvailable = false
+        };
+        await _libraryService.UpdateBookAsync(book.Id, updateBookDto);
         return CreatedAtAction(nameof(GetIssueById), new { id = createdIssueDto.Id }, createdIssueDto);
+    }
+
+    [HttpPost("return/{id}")]
+    public async Task<IActionResult> ReturnBook(int id)
+    {
+        var issue = await _libraryService.GetIssueByIdAsync(id);
+        if (issue == null) return NotFound("Issue record not found");
+        if (issue.ReturnDate != null) return BadRequest("Book is already returned");
+
+        var updateIssueDto = new UpdateIssueDto
+        {
+            BookId = issue.BookId,
+            StudentId = issue.StudentId,
+            IssueDate = issue.IssueDate,
+            ReturnDate = DateTime.Now
+        };
+        await _libraryService.UpdateIssueAsync(id, updateIssueDto);
+        var book = await _libraryService.GetBookByIdAsync(issue.BookId);
+        if(book != null)
+        {
+            var updateBookDto = new UpdateBookDto
+            {
+                Title = book.Title,
+                IsAvailable = true
+            };
+            await _libraryService.UpdateBookAsync(book.Id, updateBookDto);
+        };
+        return Ok(updateIssueDto);
     }
 
     [HttpPut("{id}")]

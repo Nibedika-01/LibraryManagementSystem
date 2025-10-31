@@ -32,6 +32,7 @@ public interface ILibraryService
     Task<StudentDto> UpdateStudentAsync(int id, UpdateStudentDto studentDto);
     Task DeleteStudentAsync(int id);
     Task<StudentDto> GetStudentByIdAsync(int id);
+    Task<int> GetTotalStudentsAsync();
     Task<IEnumerable<StudentDto>> GetAllStudentsAsync();
 
     //Issue
