@@ -48,22 +48,28 @@ public class IssuesController : ControllerBase
             BookId = issue.BookId,
             StudentId = issue.StudentId,
             IssueDate = issue.IssueDate,
-            ReturnDate = DateTime.Now
+            ReturnDate = DateTime.UtcNow  // Use UtcNow for consistency
         };
+
         await _libraryService.UpdateIssueAsync(id, updateIssueDto);
+
         var book = await _libraryService.GetBookByIdAsync(issue.BookId);
-        if(book != null)
+        if (book != null)
         {
             var updateBookDto = new UpdateBookDto
             {
                 Title = book.Title,
+                AuthorId = book.AuthorId,  // Add this
+                Genre = book.Genre,        // Add this
+                Publisher = book.Publisher, // Add this
+                PublicationDate = book.PublicationDate, // Add this
                 IsAvailable = true
             };
             await _libraryService.UpdateBookAsync(book.Id, updateBookDto);
-        };
-        return Ok(updateIssueDto);
-    }
+        }
 
+        return Ok(new { message = "Book returned successfully", issue = updateIssueDto });
+    }
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateIssue(int id, [FromBody] UpdateIssueDto issueDto)
     {

@@ -144,6 +144,7 @@ public class LibraryService : ILibraryService
         book.AuthorId = bookDto.AuthorId != 0 ? bookDto.AuthorId : book.AuthorId;
         book.Genre = bookDto.Genre ?? book.Genre;
         book.Publisher = bookDto.Publisher ?? book.Publisher;
+        book.IsAvailable = bookDto.IsAvailable;
         book.PublicationDate = bookDto.PublicationDate ?? book.PublicationDate;
 
         await _bookRepository.UpdateAsync(book);
@@ -287,6 +288,17 @@ public class LibraryService : ILibraryService
 
     public async Task DeleteIssueAsync(int id)
     {
+        var issue = await _issueRepository.GetByIdAsync(id);
+        if (issue == null)
+            throw new KeyNotFoundException($"Issue with id {id} not found");
+
+        var book = await _bookRepository.GetByIdAsync(issue.BookId);
+        if (book == null)
+            throw new KeyNotFoundException($"Book with id {issue.BookId} not found");
+
+        book.IsAvailable = true;
+        await _bookRepository.UpdateAsync(book);
+
         await _issueRepository.DeleteAsync(id);
     }
 

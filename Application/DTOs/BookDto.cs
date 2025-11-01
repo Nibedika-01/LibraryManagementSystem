@@ -14,7 +14,7 @@ public class BookDto
 public class CreateBookDto
 {
     public required string Title { get; set; }
-    public int AuthorId { get; set; }
+    public required int AuthorId { get; set; }
     public string? Genre { get; set; }
     public string? Publisher { get; set; }
     public DateTime? PublicationDate { get; set; }

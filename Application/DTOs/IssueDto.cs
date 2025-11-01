@@ -15,12 +15,12 @@ public class IssueDto
 
 public class CreateIssueDto
 {
-    [JsonPropertyName("bookIsbn")]
+    [JsonPropertyName("bookId")]
     public int BookId { get; set; }
-    [JsonPropertyName("memberId")]
+    [JsonPropertyName("studentId")]
     public int StudentId { get; set; }
     public DateTime? IssueDate { get; set; }
-    public string? Action { get; set; }
+    public DateTime? ReturnDate { get; set; }
 }
 
 public class UpdateIssueDto
