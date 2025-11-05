@@ -10,6 +10,7 @@ public class LibraryDbContext : DbContext
 	public DbSet<Book> Books { get; set; }
     public DbSet<Student> Students { get; set; }
     public DbSet<Issue> Issues { get; set; }
+    public DbSet<OTP> OTPs { get; set; }
 
 	public LibraryDbContext(DbContextOptions<LibraryDbContext> options) : base(options) { }
 
@@ -32,6 +33,19 @@ public class LibraryDbContext : DbContext
             .WithMany(s => s.Issues)
             .HasForeignKey(i => i.StudentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<OTP>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.OtpCode).IsRequired().HasMaxLength(10);
+            entity.Property(e => e.Purpose).HasMaxLength(50);
+            entity.HasIndex(e => new { e.Email, e.IsUsed });
+        });
+
+        modelBuilder.Entity<Student>()
+            .Property(s => s.CreatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
 
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
         modelBuilder.Entity<Author>().HasQueryFilter(a => !a.IsDeleted);

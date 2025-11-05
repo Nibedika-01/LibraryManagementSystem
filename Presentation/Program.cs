@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Options;
+using LibraryManagementSystem.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +26,10 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IRepositoryFactory, RepositoryFactory>();
 builder.Services.AddScoped<ILibraryService, LibraryService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile)); 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<OTPService>();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Library Management API", Version = "v1" });
