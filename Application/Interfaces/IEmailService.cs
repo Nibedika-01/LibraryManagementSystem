@@ -2,6 +2,14 @@
 
 public interface IEmailService
 {
-    Task SendOtpEmailAsync(string toEmail, string otpCode);
-    Task SendRegistrationOtpEmailAsync(string toEmail, string otpCode);
+    Task SendBookIssueNotificationAsync(
+        string toEmail,
+        string recipientName,
+        int bookId,
+        string bookTitle,
+        int studentId,
+        string studentName,
+        DateTime issueDate,
+        DateTime dueDate
+        );
 }

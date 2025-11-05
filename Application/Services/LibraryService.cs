@@ -5,6 +5,7 @@ using LibraryManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
 using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Configuration;
 
 namespace LibraryManagementSystem.Application.Services;
 
@@ -16,6 +17,8 @@ public class LibraryService : ILibraryService
     private readonly IRepository<Student> _studentRepository;
     private readonly IRepository<Issue> _issueRepository;
     private readonly IRepositoryFactory _repositoryFactory;
+    private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
 
     public LibraryService(
@@ -25,7 +28,9 @@ public class LibraryService : ILibraryService
         IRepository<Student> studentRepository,
         IRepository<Issue> issueRepository,
         IRepositoryFactory repositoryFactory,
-        IMapper mapper)
+        IConfiguration configuration,
+        IMapper mapper,
+        IEmailService emailService)
     {
         _userRepository = userRepository;
         _authorRepository = authorRepository;
@@ -33,6 +38,8 @@ public class LibraryService : ILibraryService
         _studentRepository = studentRepository;
         _issueRepository = issueRepository;
         _repositoryFactory = repositoryFactory;
+        _configuration = configuration;
+        _emailService = emailService;
         _mapper = mapper;
     }
 
@@ -192,6 +199,7 @@ public class LibraryService : ILibraryService
         student.ContactNo = studentDto.ContactNo ?? student.ContactNo;
         student.Faculty = studentDto.Faculty ?? student.Faculty;
         student.Semester = studentDto.Semester ?? student.Semester;
+        student.Email = studentDto.Email ?? student.Email;
 
         await _studentRepository.UpdateAsync(student);
         return _mapper.Map<StudentDto>(student);
@@ -218,27 +226,69 @@ public class LibraryService : ILibraryService
         return await _studentRepository.GetTotalCountAsync();
     }
 
-
     //Issue
     public async Task<IssueDto> CreateIssueAsync(CreateIssueDto issueDto)
     {
         var book = await _bookRepository.GetByIdAsync(issueDto.BookId);
-        if (book == null || book.IsDeleted) throw new Exception($"Book with id {issueDto.BookId} not found");
+        if (book == null || book.IsDeleted)
+            throw new Exception($"Book with id {issueDto.BookId} not found");
 
         var student = await _studentRepository.GetByIdAsync(issueDto.StudentId);
-        if (student == null || student.IsDeleted) throw new Exception($"Student with id {issueDto.StudentId} not found");
+        if (student == null || student.IsDeleted)
+            throw new Exception($"Student with id {issueDto.StudentId} not found");
 
-        var existingIssues = await _issueRepository.GetAllAsync(i => !i.IsDeleted && i.BookId == issueDto.BookId && !i.ReturnDate.HasValue);
-        if (existingIssues.Any()) throw new Exception("Book is already issued and not yet returned");
+        var existingIssues = await _issueRepository.GetAllAsync(i =>
+            !i.IsDeleted && i.BookId == issueDto.BookId && !i.ReturnDate.HasValue);
+        if (existingIssues.Any())
+            throw new Exception("Book is already issued and not yet returned");
+
+        var issueDate = issueDto.IssueDate ?? DateTime.UtcNow;
+        var dueDate = issueDate.AddDays(30); 
 
         var issue = new Issue
         {
             BookId = issueDto.BookId,
             StudentId = issueDto.StudentId,
-            IssueDate = issueDto.IssueDate ?? DateTime.UtcNow
+            IssueDate = issueDate
         };
 
         await _issueRepository.AddAsync(issue);
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(student.Email))
+            {
+                await _emailService.SendBookIssueNotificationAsync(
+                    toEmail: student.Email,
+                    recipientName: student.Name,
+                    bookId: book.Id,
+                    bookTitle: book.Title,
+                    studentId: student.Id,
+                    studentName: student.Name,
+                    issueDate: issueDate,
+                    dueDate: dueDate
+                );
+            }
+
+            var adminEmail = _configuration["AdminSettings:Email"]; 
+            if (!string.IsNullOrWhiteSpace(adminEmail))
+            {
+                await _emailService.SendBookIssueNotificationAsync(
+                    toEmail: adminEmail,
+                    recipientName: "Library Admin",
+                    bookId: book.Id,
+                    bookTitle: book.Title,
+                    studentId: student.Id,
+                    studentName: student.Name,
+                    issueDate: issueDate,
+                    dueDate: dueDate
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send email notification: {ex.Message}");
+        }
 
         var issueResult = _mapper.Map<IssueDto>(issue);
         issueResult.BookTitle = book.Title;

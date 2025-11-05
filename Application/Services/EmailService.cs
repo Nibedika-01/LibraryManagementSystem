@@ -16,21 +16,18 @@ public class EmailService : IEmailService
         _configuration = configuration;
     }
 
-    // Existing method for login OTP
-    public async Task SendOtpEmailAsync(string toEmail, string otpCode)
+    public async Task SendBookIssueNotificationAsync(
+        string toEmail,
+        string recipientName,
+        int bookId,
+        string bookTitle,
+        int studentId,
+        string studentName,
+        DateTime issueDate,
+        DateTime dueDate
+        )
     {
-        await SendEmailAsync(toEmail, otpCode, "Login");
-    }
 
-    // NEW method for registration OTP
-    public async Task SendRegistrationOtpEmailAsync(string toEmail, string otpCode)
-    {
-        await SendEmailAsync(toEmail, otpCode, "Registration");
-    }
-
-    // Shared email sending logic
-    private async Task SendEmailAsync(string toEmail, string otpCode, string purpose)
-    {
         var fromEmail = _configuration["EmailSettings:FromEmail"]?.Trim();
         var smtpServer = _configuration["EmailSettings:SmtpServer"]?.Trim();
         var portString = _configuration["EmailSettings:Port"]?.Trim();
@@ -57,23 +54,59 @@ public class EmailService : IEmailService
 
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress("Library System", fromEmail));
-        message.To.Add(new MailboxAddress("", toEmail));
-        message.Subject = $"Your OTP Code - Library Management System ({purpose})";
+        message.To.Add(new MailboxAddress(recipientName, toEmail));
+        message.Subject = "Book Issued - Library Management System";
 
         var htmlBody = $@"
             <html>
             <body style='font-family: Arial, sans-serif;'>
                 <div style='max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;'>
-                    <div style='background-color: white; padding: 30px; border-radius: 10px;'>
-                        <h2 style='color: #333;'>Library Management System</h2>
-                        <p style='color: #666; font-size: 16px;'>Your OTP code for {purpose.ToLower()} is:</p>
-                        <div style='background-color: #007bff; color: white; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; border-radius: 5px; margin: 20px 0;'>
-                            {otpCode}
+                    <div style='background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                        <h2 style='color: #007bff; margin-bottom: 20px;'>📚 Book Issue Notification</h2>
+                        
+                        <p style='color: #333; font-size: 16px;'>Dear <strong>{recipientName}</strong>,</p>
+                        
+                        <p style='color: #666; font-size: 14px;'>A book has been successfully issued. Here are the details:</p>
+                        
+                        <div style='background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;'>
+                            <table style='width: 100%; border-collapse: collapse;'>
+                                <tr>
+                                    <td style='padding: 8px; color: #666; font-weight: bold;'>Book ID:</td>
+                                    <td style='padding: 8px; color: #333;'>{bookId}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 8px; color: #666; font-weight: bold;'>Book Title:</td>
+                                    <td style='padding: 8px; color: #333;'>{bookTitle}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 8px; color: #666; font-weight: bold;'>Student ID:</td>
+                                    <td style='padding: 8px; color: #333;'>{studentId}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 8px; color: #666; font-weight: bold;'>Student Name:</td>
+                                    <td style='padding: 8px; color: #333;'>{studentName}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 8px; color: #666; font-weight: bold;'>Issue Date:</td>
+                                    <td style='padding: 8px; color: #333;'>{issueDate:MMMM dd, yyyy}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 8px; color: #666; font-weight: bold;'>Due Date:</td>
+                                    <td style='padding: 8px; color: #28a745; font-weight: bold;'>{dueDate:MMMM dd, yyyy}</td>
+                                </tr>
+                            </table>
                         </div>
-                        <p style='color: #666; font-size: 14px;'>This OTP will expire in <strong>5 minutes</strong>.</p>
-                        <p style='color: #666; font-size: 14px;'>If you didn't request this code, please ignore this email.</p>
+                        
+                        <div style='background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;'>
+                            <p style='color: #856404; margin: 0; font-size: 14px;'>
+                                ⚠️ <strong>Important:</strong> Please return the book on or before the due date to avoid late fees.
+                            </p>
+                        </div>
+                        
+                        <p style='color: #666; font-size: 14px; margin-top: 20px;'>Thank you for using our library!</p>
+                        
                         <hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;'>
-                        <p style='color: #999; font-size: 12px;'>This is an automated message, please do not reply.</p>
+                        <p style='color: #999; font-size: 12px;'>This is an automated message from Library Management System. Please do not reply to this email.</p>
                     </div>
                 </div>
             </body>
@@ -90,9 +123,12 @@ public class EmailService : IEmailService
             await smtp.AuthenticateAsync(username, password);
             await smtp.SendAsync(message);
             await smtp.DisconnectAsync(true);
+
+            Console.WriteLine($"Book issue notification sent to: {toEmail}");
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Failed to send email to {toEmail}: {ex.Message}");
             throw new Exception($"Failed to send email: {ex.Message}", ex);
         }
     }
