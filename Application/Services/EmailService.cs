@@ -62,7 +62,7 @@ public class EmailService : IEmailService
             <body style='font-family: Arial, sans-serif;'>
                 <div style='max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;'>
                     <div style='background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
-                        <h2 style='color: #007bff; margin-bottom: 20px;'>📚 Book Issue Notification</h2>
+                        <h2 style='color: #007bff; margin-bottom: 20px;'>Book Issue Notification</h2>
                         
                         <p style='color: #333; font-size: 16px;'>Dear <strong>{recipientName}</strong>,</p>
                         
